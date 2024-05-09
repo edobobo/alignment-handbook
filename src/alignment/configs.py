@@ -198,17 +198,21 @@ class DataArguments:
     """
 
     chat_template: Optional[str] = field(default=None, metadata={"help": "The chat template to use."})
-    dataset_mixer: Optional[Dict[str, float]] = field(
+    involved_datasets: Dict[str, str] = field(
         default=None,
-        metadata={"help": ("Datasets and their proportions to be used for training ift/rl.")},
+        metadata={"help": ("Dataset involved in the training and evaluation process with their naming")},
     )
     text_column: Optional[str] = field(
         default="text",
         metadata={"help": "The column name to use for the text in the dataset (only used for continued pretraining)."},
     )
-    dataset_splits: Optional[List[str]] = field(
-        default_factory=lambda: ["train", "test"],
-        metadata={"help": ("List of train test splits to use in the dataset")},
+    train_datasets: Dict[str, str] = field(
+        default=None,
+        metadata={"help": ("Train datasets, dictionary containg the internal name of the dataset and the split to use for training")},
+    )
+    eval_datasets: Dict[str, str] = field(
+        default=None,
+        metadata={"help": ("Evaluation datasets, dictionary containg the internal name of the dataset and the split to use for evaluation")},
     )
     dataset_configs: Optional[List[str]] = field(
         default=None,

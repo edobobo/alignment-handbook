@@ -86,9 +86,9 @@ def main():
     # Load datasets
     ###############
     raw_datasets = get_datasets(
-        data_args,
-        splits=data_args.dataset_splits,
-        configs=data_args.dataset_configs,
+        data_args.involved_datasets,
+        train_datasets=data_args.train_datasets,
+        eval_datasets=data_args.eval_datasets,
         columns_to_keep=["messages", "chosen", "rejected", "prompt", "completion", "label"],
     )
     logger.info(
@@ -153,25 +153,29 @@ def main():
     )
 
     train_dataset = raw_datasets["train"]
-    eval_dataset = raw_datasets["test"]
+    eval_dataset = raw_datasets["test"] if "test" in raw_datasets else None
 
     with training_args.main_process_first(desc="Log a few random samples from the processed training set"):
         for index in random.sample(range(len(raw_datasets["train"])), 3):
             logger.info(f"Sample {index} of the processed training set:\n\n{raw_datasets['train'][index]['text']}")
+
+    tokenizer.add_special_tokens({"additional_special_tokens": ["<|user|>", "<|assistant|>", "<|system|>"]})
+    model = AutoModelForCausalLM.from_pretrained(model, **model_kwargs)
+    model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of=8)
 
     ########################
     # Initialize the Trainer
     ########################
     trainer = SFTTrainer(
         model=model,
-        model_init_kwargs=model_kwargs,
+        # model_init_kwargs=model_kwargs,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         dataset_text_field="text",
         max_seq_length=training_args.max_seq_length,
         tokenizer=tokenizer,
-        packing=True,
+        packing=False,
         peft_config=get_peft_config(model_args),
         dataset_kwargs=training_args.dataset_kwargs,
     )
